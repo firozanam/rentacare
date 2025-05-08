@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Building, CalendarDays, Clock, Grid, Heart, Home, List, MapPin, MessageCircle, Star } from "lucide-react"
+import { Building, CalendarDays, Clock, Grid, Heart, Home, List, MapPin, MessageCircle, Star, X, ChevronLeft, ChevronRight } from "lucide-react"
 import LocationFilter from "@/components/location-filter"
 import PropertyCard from "@/components/property-card"
 import Image from "next/image"
@@ -2661,14 +2661,53 @@ export default function ListingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-6">
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
+    <div className="container mx-auto px-4 py-4 md:px-6 md:py-6">
+      <div className="flex flex-col gap-4 md:gap-6">
+        {/* Header Section */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold tracking-tight">Rental Listings</h1>
             <p className="text-muted-foreground">Browse all available rental properties</p>
           </div>
-          <div className="flex items-center gap-2">
+          
+          {/* Mobile Filter Button and View Toggle */}
+          <div className="flex items-center justify-between gap-4 md:hidden">
+            <Button 
+              variant="outline" 
+              className="flex-1 justify-start gap-2"
+              onClick={() => document.getElementById('filterDrawer')?.classList.remove('translate-x-full')}
+            >
+              <Building className="h-4 w-4" />
+              Filters & Sort
+            </Button>
+            <div className="flex border rounded-md overflow-hidden">
+              <Button 
+                variant={viewMode === "grid" ? "default" : "ghost"} 
+                size="sm"
+                className="flex items-center gap-1 rounded-none px-3"
+                onClick={() => {
+                  setViewMode("grid")
+                  setCurrentPage(1)
+                }}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant={viewMode === "list" ? "default" : "ghost"} 
+                size="sm"
+                className="flex items-center gap-1 rounded-none px-3"
+                onClick={() => {
+                  setViewMode("list")
+                  setCurrentPage(1)
+                }}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Desktop View Toggle */}
+          <div className="hidden md:flex justify-end">
             <div className="flex border rounded-md overflow-hidden">
               <Button 
                 variant={viewMode === "grid" ? "default" : "ghost"} 
@@ -2676,7 +2715,7 @@ export default function ListingsPage() {
                 className="flex items-center gap-1 rounded-none"
                 onClick={() => {
                   setViewMode("grid")
-                  setCurrentPage(1) // Reset to first page when changing view
+                  setCurrentPage(1)
                 }}
               >
                 <Grid className="h-4 w-4" />
@@ -2688,7 +2727,7 @@ export default function ListingsPage() {
                 className="flex items-center gap-1 rounded-none"
                 onClick={() => {
                   setViewMode("list")
-                  setCurrentPage(1) // Reset to first page when changing view
+                  setCurrentPage(1)
                 }}
               >
                 <List className="h-4 w-4" />
@@ -2698,12 +2737,105 @@ export default function ListingsPage() {
           </div>
         </div>
 
+        {/* Mobile Filter Drawer */}
+        <div 
+          id="filterDrawer"
+          className="fixed inset-y-0 right-0 w-full max-w-xs bg-background shadow-xl transform translate-x-full transition-transform duration-200 ease-in-out z-50 md:hidden"
+        >
+          <div className="flex flex-col h-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="font-semibold">Filters & Sort</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => document.getElementById('filterDrawer')?.classList.add('translate-x-full')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 space-y-6">
+                {/* Search */}
+                <div>
+                  <h3 className="font-medium mb-2">Search</h3>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search listings..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-medium mb-2">Location</h3>
+                  <LocationFilter onLocationSelect={handleLocationSelect} />
+                </div>
+
+                {/* Property Type */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-medium mb-2">Property Type</h3>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { name: "Apartments", icon: <Building className="h-4 w-4" /> },
+                      { name: "Houses", icon: <Home className="h-4 w-4" /> },
+                      { name: "Mess Accommodations", icon: <Building className="h-4 w-4" /> },
+                      { name: "Mess Seats", icon: <MapPin className="h-4 w-4" /> },
+                    ].map((type, i) => (
+                      <Button 
+                        key={i} 
+                        variant={selectedPropertyType === type.name ? "default" : "outline"} 
+                        className="justify-start gap-2 h-auto py-2"
+                        onClick={() => setSelectedPropertyType(selectedPropertyType === type.name ? "" : type.name)}
+                      >
+                        {type.icon}
+                        {type.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort By */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-medium mb-2">Sort By</h3>
+                  <div className="flex flex-col gap-2">
+                    {["Newest First", "Oldest First", "Most Liked", "Most Commented"].map((option, i) => (
+                      <Button 
+                        key={i} 
+                        variant={sortBy === option ? "default" : "outline"} 
+                        className="justify-start h-auto py-2"
+                        onClick={() => setSortBy(option)}
+                      >
+                        {option}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  clearAllFilters()
+                  document.getElementById('filterDrawer')?.classList.add('translate-x-full')
+                }}
+              >
+                Clear All Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <Card className="md:col-span-1 h-fit">
+          {/* Desktop Filters Sidebar */}
+          <Card className="hidden md:block md:col-span-1 h-fit">
             <CardContent className="p-4">
               <div className="flex flex-col gap-4">
-                {/* Search */}
+                {/* Desktop filter content - same as mobile drawer */}
                 <div>
                   <h3 className="font-medium mb-2">Search</h3>
                   <div className="relative">
@@ -2759,7 +2891,6 @@ export default function ListingsPage() {
                   </div>
                 </div>
                 
-                {/* Clear Filters */}
                 {(searchTerm || selectedLocation || selectedPropertyType) && (
                   <div className="border-t pt-4">
                     <Button 
@@ -2784,7 +2915,7 @@ export default function ListingsPage() {
             </div>
             
             {filteredProperties.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
                 <div className="mb-4 text-muted-foreground">
                   <Building className="h-12 w-12 mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-1">No properties found</h3>
@@ -2795,7 +2926,7 @@ export default function ListingsPage() {
                 </Button>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {currentProperties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
@@ -2827,17 +2958,17 @@ export default function ListingsPage() {
                         </div>
                       </div>
                       <div className="flex-1 p-4">
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 mb-2">
+                        <div className="flex flex-col gap-2">
                           <div>
                             <h3 className="font-medium text-lg hover:text-primary transition-colors">
                               <Link href={`/listing/${property.id}`}>{property.title}</Link>
                             </h3>
                             <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                              <MapPin className="h-4 w-4" />
-                              <span>{property.location}</span>
+                              <MapPin className="h-4 w-4 flex-shrink-0" />
+                              <span className="line-clamp-1">{property.location}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap justify-end">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className="whitespace-nowrap">
                               {property.available}
                             </Badge>
@@ -2845,7 +2976,7 @@ export default function ListingsPage() {
                           </div>
                         </div>
                         
-                        <div className="flex flex-wrap gap-2 mb-4 mt-3">
+                        <div className="flex flex-wrap gap-2 my-3">
                           <Badge variant="outline" className="bg-muted/50">
                             {property.type}
                           </Badge>
@@ -2888,7 +3019,7 @@ export default function ListingsPage() {
                           )}
                         </div>
                         
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t pt-3">
+                        <div className="flex flex-col gap-3 border-t pt-3">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
@@ -2903,7 +3034,7 @@ export default function ListingsPage() {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-4 sm:gap-6">
+                          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-1 text-muted-foreground text-sm">
                                 <Heart className="h-4 w-4" />
@@ -2916,10 +3047,10 @@ export default function ListingsPage() {
                             </div>
                             
                             <div className="flex gap-2">
-                              <Button asChild size="sm" variant="outline">
+                              <Button asChild size="sm" variant="outline" className="flex-1 sm:flex-none">
                                 <Link href={`/listing/${property.id}`}>View Details</Link>
                               </Button>
-                              <Button size="sm" variant="default" className="gap-1">
+                              <Button size="sm" variant="default" className="gap-1 flex-1 sm:flex-none">
                                 <MessageCircle className="h-4 w-4" />
                                 Contact
                               </Button>
@@ -2933,17 +3064,19 @@ export default function ListingsPage() {
               </div>
             )}
 
-            {/* Pagination - only show if there are properties to display */}
+            {/* Pagination */}
             {filteredProperties.length > 0 && (
-              <div className="flex justify-center mt-8">
-                <div className="flex gap-1">
+              <div className="flex justify-center mt-6 md:mt-8">
+                <div className="flex gap-1 overflow-x-auto pb-2 max-w-full">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}
+                    className="px-2 sm:px-4"
                   >
-                    Previous
+                    <ChevronLeft className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
                   
                   {/* First page */}
@@ -2973,7 +3106,6 @@ export default function ListingsPage() {
                   {/* Pages around current page */}
                   {Array.from({ length: totalPages }).map((_, i) => {
                     const pageNumber = i + 1;
-                    // Show 1 page before and after current page
                     if (
                       pageNumber !== 1 &&
                       pageNumber !== totalPages &&
@@ -3024,8 +3156,10 @@ export default function ListingsPage() {
                     size="sm"
                     disabled={currentPage === totalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
+                    className="px-2 sm:px-4"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="h-4 w-4 sm:ml-1" />
                   </Button>
                 </div>
               </div>
